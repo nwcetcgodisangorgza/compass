@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Centers from "@/pages/centers";
+import Districts from "@/pages/districts";
 import Lecturers from "@/pages/lecturers";
 import Students from "@/pages/students";
 import Assets from "@/pages/assets";
@@ -46,6 +47,7 @@ function App() {
           <Switch>
             <Route path="/" component={Dashboard} />
             <Route path="/centers" component={Centers} />
+            <Route path="/districts" component={Districts} />
             <Route path="/lecturers" component={Lecturers} />
             <Route path="/students" component={Students} />
             <Route path="/assets" component={Assets} />

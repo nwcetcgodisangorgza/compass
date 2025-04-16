@@ -22,6 +22,7 @@ interface NavItem {
 const mainNavItems: NavItem[] = [
   { name: 'Dashboard', icon: 'dashboard', path: '/' },
   { name: 'Centers', icon: 'business', path: '/centers' },
+  { name: 'Districts', icon: 'location_on', path: '/districts' },
   { name: 'Lecturers', icon: 'school', path: '/lecturers' },
   { name: 'Students', icon: 'people', path: '/students' },
   { name: 'Assets', icon: 'inventory_2', path: '/assets' },
