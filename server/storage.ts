@@ -459,4 +459,328 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+import { db } from "./db";
+import { eq, sql } from "drizzle-orm";
+import * as schema from "@shared/schema";
+
+export class DatabaseStorage implements IStorage {
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(schema.users).where(eq(schema.users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(schema.users).where(eq(schema.users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(schema.users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+
+  async updateUser(id: number, updateData: Partial<User>): Promise<User | undefined> {
+    const [user] = await db
+      .update(schema.users)
+      .set(updateData)
+      .where(eq(schema.users.id, id))
+      .returning();
+    return user;
+  }
+  
+  // Center methods
+  async getCenter(id: number): Promise<Center | undefined> {
+    const [center] = await db.select().from(schema.centers).where(eq(schema.centers.id, id));
+    return center || undefined;
+  }
+
+  async getCenters(): Promise<Center[]> {
+    return db.select().from(schema.centers);
+  }
+
+  async createCenter(insertCenter: InsertCenter): Promise<Center> {
+    const [center] = await db
+      .insert(schema.centers)
+      .values(insertCenter)
+      .returning();
+    return center;
+  }
+
+  async updateCenter(id: number, updateData: Partial<Center>): Promise<Center | undefined> {
+    const [center] = await db
+      .update(schema.centers)
+      .set(updateData)
+      .where(eq(schema.centers.id, id))
+      .returning();
+    return center;
+  }
+
+  async deleteCenter(id: number): Promise<boolean> {
+    const result = await db
+      .delete(schema.centers)
+      .where(eq(schema.centers.id, id));
+    return true; // Assuming deletion was successful if no error was thrown
+  }
+  
+  // Lecturer methods
+  async getLecturer(id: number): Promise<Lecturer | undefined> {
+    const [lecturer] = await db.select().from(schema.lecturers).where(eq(schema.lecturers.id, id));
+    return lecturer || undefined;
+  }
+
+  async getLecturers(): Promise<Lecturer[]> {
+    return db.select().from(schema.lecturers);
+  }
+
+  async createLecturer(insertLecturer: InsertLecturer): Promise<Lecturer> {
+    const [lecturer] = await db
+      .insert(schema.lecturers)
+      .values(insertLecturer)
+      .returning();
+    return lecturer;
+  }
+
+  async updateLecturer(id: number, updateData: Partial<Lecturer>): Promise<Lecturer | undefined> {
+    const [lecturer] = await db
+      .update(schema.lecturers)
+      .set(updateData)
+      .where(eq(schema.lecturers.id, id))
+      .returning();
+    return lecturer;
+  }
+
+  async deleteLecturer(id: number): Promise<boolean> {
+    const result = await db
+      .delete(schema.lecturers)
+      .where(eq(schema.lecturers.id, id));
+    return true;
+  }
+  
+  // Student methods
+  async getStudent(id: number): Promise<Student | undefined> {
+    const [student] = await db.select().from(schema.students).where(eq(schema.students.id, id));
+    return student || undefined;
+  }
+
+  async getStudents(): Promise<Student[]> {
+    return db.select().from(schema.students);
+  }
+
+  async createStudent(insertStudent: InsertStudent): Promise<Student> {
+    const [student] = await db
+      .insert(schema.students)
+      .values(insertStudent)
+      .returning();
+    return student;
+  }
+
+  async updateStudent(id: number, updateData: Partial<Student>): Promise<Student | undefined> {
+    const [student] = await db
+      .update(schema.students)
+      .set(updateData)
+      .where(eq(schema.students.id, id))
+      .returning();
+    return student;
+  }
+
+  async deleteStudent(id: number): Promise<boolean> {
+    const result = await db
+      .delete(schema.students)
+      .where(eq(schema.students.id, id));
+    return true;
+  }
+  
+  // Asset methods
+  async getAsset(id: number): Promise<Asset | undefined> {
+    const [asset] = await db.select().from(schema.assets).where(eq(schema.assets.id, id));
+    return asset || undefined;
+  }
+
+  async getAssets(): Promise<Asset[]> {
+    return db.select().from(schema.assets);
+  }
+
+  async createAsset(insertAsset: InsertAsset): Promise<Asset> {
+    const [asset] = await db
+      .insert(schema.assets)
+      .values(insertAsset)
+      .returning();
+    return asset;
+  }
+
+  async updateAsset(id: number, updateData: Partial<Asset>): Promise<Asset | undefined> {
+    const [asset] = await db
+      .update(schema.assets)
+      .set(updateData)
+      .where(eq(schema.assets.id, id))
+      .returning();
+    return asset;
+  }
+
+  async deleteAsset(id: number): Promise<boolean> {
+    const result = await db
+      .delete(schema.assets)
+      .where(eq(schema.assets.id, id));
+    return true;
+  }
+  
+  // Course methods
+  async getCourse(id: number): Promise<Course | undefined> {
+    const [course] = await db.select().from(schema.courses).where(eq(schema.courses.id, id));
+    return course || undefined;
+  }
+
+  async getCourses(): Promise<Course[]> {
+    return db.select().from(schema.courses);
+  }
+
+  async createCourse(insertCourse: InsertCourse): Promise<Course> {
+    const [course] = await db
+      .insert(schema.courses)
+      .values(insertCourse)
+      .returning();
+    return course;
+  }
+
+  async updateCourse(id: number, updateData: Partial<Course>): Promise<Course | undefined> {
+    const [course] = await db
+      .update(schema.courses)
+      .set(updateData)
+      .where(eq(schema.courses.id, id))
+      .returning();
+    return course;
+  }
+
+  async deleteCourse(id: number): Promise<boolean> {
+    const result = await db
+      .delete(schema.courses)
+      .where(eq(schema.courses.id, id));
+    return true;
+  }
+  
+  // Enrollment methods
+  async getEnrollment(id: number): Promise<Enrollment | undefined> {
+    const [enrollment] = await db.select().from(schema.enrollments).where(eq(schema.enrollments.id, id));
+    return enrollment || undefined;
+  }
+
+  async getEnrollments(): Promise<Enrollment[]> {
+    return db.select().from(schema.enrollments);
+  }
+
+  async getEnrollmentsByStudent(studentId: number): Promise<Enrollment[]> {
+    return db
+      .select()
+      .from(schema.enrollments)
+      .where(eq(schema.enrollments.studentId, studentId));
+  }
+
+  async getEnrollmentsByCourse(courseId: number): Promise<Enrollment[]> {
+    return db
+      .select()
+      .from(schema.enrollments)
+      .where(eq(schema.enrollments.courseId, courseId));
+  }
+
+  async createEnrollment(insertEnrollment: InsertEnrollment): Promise<Enrollment> {
+    const [enrollment] = await db
+      .insert(schema.enrollments)
+      .values(insertEnrollment)
+      .returning();
+    return enrollment;
+  }
+
+  async updateEnrollment(id: number, updateData: Partial<Enrollment>): Promise<Enrollment | undefined> {
+    const [enrollment] = await db
+      .update(schema.enrollments)
+      .set(updateData)
+      .where(eq(schema.enrollments.id, id))
+      .returning();
+    return enrollment;
+  }
+
+  async deleteEnrollment(id: number): Promise<boolean> {
+    const result = await db
+      .delete(schema.enrollments)
+      .where(eq(schema.enrollments.id, id));
+    return true;
+  }
+  
+  // District methods
+  async getDistrict(id: number): Promise<District | undefined> {
+    const [district] = await db.select().from(schema.districts).where(eq(schema.districts.id, id));
+    return district || undefined;
+  }
+
+  async getDistricts(): Promise<District[]> {
+    return db.select().from(schema.districts);
+  }
+
+  async createDistrict(insertDistrict: InsertDistrict): Promise<District> {
+    const [district] = await db
+      .insert(schema.districts)
+      .values(insertDistrict)
+      .returning();
+    return district;
+  }
+
+  async updateDistrict(id: number, updateData: Partial<District>): Promise<District | undefined> {
+    const [district] = await db
+      .update(schema.districts)
+      .set(updateData)
+      .where(eq(schema.districts.id, id))
+      .returning();
+    return district;
+  }
+
+  async deleteDistrict(id: number): Promise<boolean> {
+    const result = await db
+      .delete(schema.districts)
+      .where(eq(schema.districts.id, id));
+    return true;
+  }
+
+  // Dashboard methods
+  async getDashboardSummary(): Promise<any> {
+    const centerCount = await db.select({ count: sql`count(*)` }).from(schema.centers);
+    const lecturerCount = await db.select({ count: sql`count(*)` }).from(schema.lecturers);
+    const studentCount = await db.select({ count: sql`count(*)` }).from(schema.students);
+    const assetCount = await db.select({ count: sql`count(*)` }).from(schema.assets);
+    const districtCount = await db.select({ count: sql`count(*)` }).from(schema.districts);
+    
+    const mainCenters = await db
+      .select({ count: sql`count(*)` })
+      .from(schema.centers)
+      .where(eq(schema.centers.type, 'Main'));
+    
+    const satelliteCenters = await db
+      .select({ count: sql`count(*)` })
+      .from(schema.centers)
+      .where(eq(schema.centers.type, 'Satellite'));
+    
+    const operationalCenters = await db
+      .select({ count: sql`count(*)` })
+      .from(schema.centers)
+      .where(eq(schema.centers.type, 'Operational Site'));
+
+    return {
+      centerCount: Number(centerCount[0]?.count || 0),
+      lecturerCount: Number(lecturerCount[0]?.count || 0),
+      studentCount: Number(studentCount[0]?.count || 0),
+      assetCount: Number(assetCount[0]?.count || 0),
+      districtCount: Number(districtCount[0]?.count || 0),
+      centersByType: {
+        main: Number(mainCenters[0]?.count || 0),
+        satellite: Number(satelliteCenters[0]?.count || 0),
+        operational: Number(operationalCenters[0]?.count || 0),
+      }
+    };
+  }
+}
+
+// Initialize with DatabaseStorage instead of MemStorage
+export const storage = new DatabaseStorage();
