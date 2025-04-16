@@ -31,14 +31,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const { data, isLoading: isUserLoading, refetch } = useQuery<User | null>({
     queryKey: ["/api/auth/me"],
-    onSuccess: (data) => {
-      setUser(data);
-      setIsLoading(false);
+    queryFn: async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (!res.ok) return null;
+        return await res.json();
+      } catch (e) {
+        return null;
+      }
     },
-    onError: () => {
-      setUser(null);
-      setIsLoading(false);
-    },
+    enabled: false, // Don't run this query since we're using mock data
     retry: false,
   });
 
@@ -72,15 +74,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // For demo purposes, simulate a logged-in user
   useEffect(() => {
-    setTimeout(() => {
-      setUser({
-        id: 1,
-        username: "admin",
-        name: "John Ndlovu",
-        role: "System Administrator",
-      });
-      setIsLoading(false);
-    }, 1000);
+    // Set user immediately to avoid loading delay
+    setUser({
+      id: 1,
+      username: "admin",
+      name: "John Ndlovu",
+      role: "System Administrator",
+    });
+    setIsLoading(false);
   }, []);
 
   return (

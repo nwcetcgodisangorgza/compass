@@ -177,6 +177,27 @@ export const enrollments = pgTable("enrollments", {
   lastUpdated: timestamp("last_updated").defaultNow(),
 });
 
+// District schema
+export const districts = pgTable("districts", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  code: text("code").notNull().unique(),
+  region: text("region").notNull(),
+  province: text("province").notNull(),
+  population: integer("population"),
+  area: decimal("area", { precision: 10, scale: 2 }), // in square kilometers
+  mainCity: text("main_city"),
+  description: text("description"),
+  economicActivities: text("economic_activities"),
+  educationStats: jsonb("education_stats"), // JSON with education statistics
+  infrastructureRating: text("infrastructure_rating"), // Poor, Fair, Good, Excellent
+  centreCapacity: integer("centre_capacity"), // Total capacity of all centers
+  currentEnrollment: integer("current_enrollment"), // Current enrollment of all centers
+  dateAdded: timestamp("date_added").defaultNow(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  isActive: boolean("is_active").default(true),
+});
+
 // Create insert schemas using Zod
 export const insertUserSchema = createInsertSchema(users).omit({ id: true });
 export const insertCenterSchema = createInsertSchema(centers).omit({ id: true, dateAdded: true, lastUpdated: true });
@@ -185,6 +206,7 @@ export const insertStudentSchema = createInsertSchema(students).omit({ id: true,
 export const insertAssetSchema = createInsertSchema(assets).omit({ id: true, dateAdded: true, lastUpdated: true });
 export const insertCourseSchema = createInsertSchema(courses).omit({ id: true, dateAdded: true, lastUpdated: true });
 export const insertEnrollmentSchema = createInsertSchema(enrollments).omit({ id: true, dateAdded: true, lastUpdated: true });
+export const insertDistrictSchema = createInsertSchema(districts).omit({ id: true, dateAdded: true, lastUpdated: true });
 
 // Define types from the schemas
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -194,6 +216,7 @@ export type InsertStudent = z.infer<typeof insertStudentSchema>;
 export type InsertAsset = z.infer<typeof insertAssetSchema>;
 export type InsertCourse = z.infer<typeof insertCourseSchema>;
 export type InsertEnrollment = z.infer<typeof insertEnrollmentSchema>;
+export type InsertDistrict = z.infer<typeof insertDistrictSchema>;
 
 export type User = typeof users.$inferSelect;
 export type Center = typeof centers.$inferSelect;
@@ -202,3 +225,4 @@ export type Student = typeof students.$inferSelect;
 export type Asset = typeof assets.$inferSelect;
 export type Course = typeof courses.$inferSelect;
 export type Enrollment = typeof enrollments.$inferSelect;
+export type District = typeof districts.$inferSelect;

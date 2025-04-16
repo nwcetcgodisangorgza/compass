@@ -44,8 +44,8 @@ export function Sidebar({ isCollapsed, onToggle, user }: SidebarProps) {
       <div className="flex items-center justify-between p-4 border-b border-neutral-200">
         <div className="flex items-center space-x-2">
           {/* Logo placeholder */}
-          <div className="h-8 w-8 bg-primary rounded flex items-center justify-center text-white font-bold">A+</div>
-          {!isCollapsed && <h1 className="text-lg font-medium text-neutral-800">ASSET-PLUS</h1>}
+          <div className="h-8 w-8 bg-primary rounded flex items-center justify-center text-white font-bold">NC</div>
+          {!isCollapsed && <h1 className="text-lg font-medium text-neutral-800">NWCETC Compass</h1>}
         </div>
         <button 
           onClick={onToggle}
