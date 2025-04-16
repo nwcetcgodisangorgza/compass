@@ -1,0 +1,279 @@
+# ASSET-PLUS Web Application Development Prompt
+
+## Project Overview
+
+Develop a comprehensive web-based resource management system called ASSET-PLUS for the North West Community Education and Training (CET) College in South Africa. This system will enable management to make informed decisions about resource allocation, staff management, student tracking, and asset management across multiple educational centers.
+
+## System Requirements
+
+### Core Functionality
+1. Create a web-based management portal with a responsive design
+2. Implement GIS mapping for visualizing center locations
+3. Design a comprehensive database to store all organizational data
+4. Build analytics and reporting capabilities
+5. Ensure the system is accessible only to authorized managers
+
+### Key Modules with Detailed Field Specifications
+
+#### 1. College/Center Management Module
+- **Required Fields:**
+  - Center ID (auto-generated primary key)
+  - Center Name (text, required)
+  - Center Type (dropdown: Main, Satellite, Operational Site)
+  - Physical Address (text area, required)
+  - District/Region (dropdown, required)
+  - GPS Coordinates (latitude/longitude, required)
+  - Phone Number (text, required)
+  - Email Address (email, required)
+  - Principal/Manager Name (text, required)
+  - Facility Size in Square Meters (number)
+  - Number of Classrooms (number)
+  - Maximum Student Capacity (number)
+  - Current Student Count (number)
+  - Ownership Status (dropdown: Owned, Leased, Partnership)
+  - Lease Start Date (date, conditional if leased)
+  - Lease End Date (date, conditional if leased)
+  - Monthly Rent Amount (currency, conditional if leased)
+  - Building Condition Rating (dropdown: Excellent, Good, Fair, Poor, Critical)
+  - Internet Connectivity (dropdown: None, Basic, High-speed)
+  - Electricity Status (dropdown: Full service, Partial, None)
+  - Water Access (dropdown: Full service, Partial, None)
+  - Surrounding Industries/Employers (text area)
+  - Courses Offered (multi-select dropdown linked to courses)
+  - Available Resources (text area)
+  - Facility Notes (text area)
+  - Date Added to System (date, auto-generated)
+  - Last Updated (date, auto-generated)
+  - Active Status (boolean)
+
+#### 2. Lecturer Management Module
+- **Required Fields:**
+  - Staff ID (auto-generated primary key)
+  - ID Number/Employee Number (text, unique, required)
+  - First Name (text, required)
+  - Last Name (text, required)
+  - Date of Birth (date)
+  - Gender (dropdown)
+  - Contact Number (text, required)
+  - Email Address (email, required)
+  - Home Address (text area)
+  - Emergency Contact (text)
+  - Employment Status (dropdown: Full-time, Part-time)
+  - Contract Status (dropdown: Active, Inactive, Pending)
+  - Contract Start Date (date, required)
+  - Contract End Date (date)
+  - Primary Center Assignment (dropdown, link to centers)
+  - Secondary Center Assignments (multi-select, link to centers)
+  - Teaching Hours per Week (number)
+  - Subjects/Courses Taught (multi-select dropdown)
+  - Highest Qualification (dropdown: PhD, Masters, Bachelors, Diploma, Certificate)
+  - Field of Study (text)
+  - Institution of Highest Qualification (text)
+  - Additional Qualifications (text area)
+  - Years of Teaching Experience (number)
+  - Years at Current Institution (number)
+  - Skills Assessment (multiple entries):
+    - Skill Category (dropdown)
+    - Skill Name (text)
+    - Proficiency Level (dropdown: Beginner, Intermediate, Expert)
+  - Professional Development Needs (text area)
+  - Performance Rating (dropdown: Outstanding, Exceeds Expectations, Meets Expectations, Needs Improvement)
+  - Salary Grade (dropdown)
+  - Bank Account Details (encrypted)
+  - Tax Number (encrypted)
+  - Notes (text area)
+  - Date Added to System (date, auto-generated)
+  - Last Updated (date, auto-generated)
+  - Profile Photo (image upload)
+  - Document Uploads (multiple file uploads for certificates, contracts)
+
+#### 3. Student Management Module
+- **Required Fields:**
+  - Student ID (auto-generated primary key)
+  - National ID Number (text, unique, required)
+  - First Name (text, required)
+  - Last Name (text, required)
+  - Date of Birth (date, required)
+  - Gender (dropdown)
+  - Contact Number (text)
+  - Email Address (email)
+  - Home Address (text area)
+  - Emergency Contact Name (text)
+  - Emergency Contact Number (text)
+  - Home Center/Campus (dropdown, link to centers)
+  - Registration Date (date, required)
+  - Current Academic Status (dropdown: Active, Graduated, Withdrawn, On Leave)
+  - Previous Education Level (dropdown)
+  - Enrolled Course(s) (multi-select dropdown)
+  - Course Start Date(s) (multiple dates)
+  - Expected Completion Date(s) (multiple dates)
+  - Actual Completion Date(s) (multiple dates)
+  - Academic Performance (multiple records):
+    - Course (dropdown)
+    - Term/Semester (text)
+    - Grade/Result (text)
+  - Special Needs/Accommodations (text area)
+  - Funding/Scholarship Status (dropdown)
+  - Notes (text area)
+  - Date Added to System (date, auto-generated)
+  - Last Updated (date, auto-generated)
+  - Profile Photo (image upload)
+  - Document Uploads (multiple file uploads)
+
+#### 4. Asset Management Module
+- **Required Fields:**
+  - Asset ID (auto-generated primary key)
+  - Asset Tag Number (text, unique, required)
+  - Asset Name/Description (text, required)
+  - Asset Category (dropdown: IT Equipment, Furniture, Vehicle, Teaching Aid, Office Equipment, etc.)
+  - Asset Sub-Category (dropdown, dependent on category)
+  - Make/Brand (text)
+  - Model Number (text)
+  - Serial Number (text)
+  - Acquisition Date (date)
+  - Purchase Price (currency)
+  - Current Estimated Value (currency)
+  - Supplier/Vendor (text)
+  - Warranty Start Date (date)
+  - Warranty End Date (date)
+  - Assigned Center/Location (dropdown, link to centers)
+  - Physical Location within Center (text)
+  - Assigned Department (dropdown)
+  - Assigned User/Custodian (dropdown, link to staff)
+  - Current Condition (dropdown: New, Excellent, Good, Fair, Poor, Non-functional)
+  - Current Status (dropdown: Available, In Use, Under Maintenance, Decommissioned)
+  - Expected Lifespan (years/number)
+  - Depreciation Method (dropdown)
+  - Maintenance Schedule (dropdown: Monthly, Quarterly, Bi-annually, Annually, As Needed)
+  - Last Maintenance Date (date)
+  - Next Scheduled Maintenance (date)
+  - Maintenance History (multiple records):
+    - Maintenance Date (date)
+    - Maintenance Type (dropdown)
+    - Performed By (text)
+    - Cost (currency)
+    - Description (text area)
+  - Insurance Information (text)
+  - Notes/Comments (text area)
+  - Topology Information (text area for equipment layout or grouping)
+  - Date Added to System (date, auto-generated)
+  - Last Updated (date, auto-generated)
+  - Asset Photo (image upload)
+  - Document Uploads (warranty, manuals, receipts)
+
+### Additional Module Requirements
+
+#### 5. Course/Program Management Module
+- **Required Fields:**
+  - Course ID (auto-generated primary key)
+  - Course Code (text, unique, required)
+  - Course Title (text, required)
+  - Course Description (text area)
+  - Level (dropdown: Beginner, Intermediate, Advanced)
+  - Credits/Units (number)
+  - Duration in Weeks (number)
+  - Prerequisites (multi-select dropdown linking to other courses)
+  - Centers Offering (multi-select dropdown linking to centers)
+  - Maximum Class Size (number)
+  - Current Total Enrollment (auto-calculated)
+  - Industry Alignment (text area)
+  - Course Materials (text area)
+  - Required Resources (text area)
+  - Course Coordinator (dropdown linked to lecturers)
+  - Active Status (boolean)
+  - Date Added (date, auto-generated)
+  - Last Updated (date, auto-generated)
+
+#### 6. Dashboard and Analytics Module
+- **Components:**
+  - Executive Summary Dashboard
+  - Center Performance Metrics
+  - Student Enrollment Trends
+  - Resource Utilization Analytics
+  - Staff Allocation Overview
+  - Asset Distribution Visualization
+  - Course Popularity Metrics
+  - Geographical Coverage Analysis
+
+### Technical Requirements for Web Application
+
+#### Frontend Requirements
+- Responsive design working on desktop and tablet devices
+- Modern UI framework (React, Angular, or Vue.js recommended)
+- Interactive data tables with filtering, sorting, and pagination
+- Form validation with user-friendly error messages
+- Rich text editing for detailed descriptions
+- File upload capability with preview
+- Dynamic form elements based on selected options
+- Session timeout notifications
+- Breadcrumb navigation
+
+#### Mapping Features
+- Interactive map displaying all centers
+- Color-coding based on center attributes (type, size, condition)
+- Filterable view by district, center type, etc.
+- Map layers for different data visualizations
+- Distance calculations and coverage analysis
+- Map export functionality
+- Center clustering for areas with multiple locations
+
+#### Security and Access Control
+- Role-based access control (Admin, Manager levels)
+- Access restricted to managers only
+- Secure authentication with password policies
+- Two-factor authentication for sensitive operations
+- Data encryption for sensitive information
+- Session management
+- Audit logging of all system activities
+- CSRF protection
+- Input sanitization
+
+#### Reporting and Analytics
+- Dashboard with key performance indicators
+- Customizable reports with parameter selection
+- Scheduled report generation
+- Data visualization (charts, graphs, heat maps)
+- Export functionality (PDF, Excel, CSV)
+- Report saving and sharing
+- Data filtering and drill-down capabilities
+
+#### Database Requirements
+- Proper normalization and relationship design
+- Indexing for performance optimization
+- Data validation constraints
+- Transaction support
+- Backup and recovery procedures
+- Support for spatial data (for GIS functionality)
+
+## Technology Stack Recommendations
+- **Frontend**: React.js with Material UI or Angular with PrimeNG
+- **Backend**: Node.js with Express or ASP.NET Core or Django
+- **Database**: PostgreSQL with PostGIS extension or SQL Server
+- **Mapping**: Leaflet or Google Maps API
+- **Charts/Visualization**: Chart.js or D3.js
+- **Authentication**: JWT with secure storage
+- **Hosting**: Cloud-based with proper security configurations
+
+## Development Guidelines
+1. Use component-based architecture for reusability
+2. Implement responsive design following mobile-first principles
+3. Follow security best practices for sensitive data
+4. Optimize database queries for performance
+5. Design intuitive user interfaces requiring minimal training
+6. Document code thoroughly with JSDoc or similar
+7. Implement comprehensive error handling
+8. Follow accessibility guidelines (WCAG 2.1)
+9. Use consistent naming conventions
+10. Include input validation on both client and server sides
+
+## Deliverables
+1. Complete source code for web application
+2. Database schema with documentation
+3. API documentation
+4. Comprehensive user manual
+5. Administrator documentation
+6. Deployment instructions
+7. Database backup and restoration procedures
+8. Security documentation
+
+This web application will serve as a critical management tool enabling data-driven decision making for resource allocation, staff management, and strategic planning at the North West CET College.
