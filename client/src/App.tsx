@@ -17,27 +17,20 @@ import { Header } from "@/components/layout/header";
 import { useAuth } from "@/hooks/use-auth";
 
 function App() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  // TEMPORARY: Hard code auth for development
+  const [authenticated, setAuthenticated] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const user = { id: 1, username: "admin", name: "System Administrator", role: "admin" };
   
-  // For development, log auth state
+  // For development, log state
   useEffect(() => {
-    console.log('Auth state:', { user, isAuthenticated, isLoading });
-  }, [user, isAuthenticated, isLoading]);
+    console.log('Using development auth override');
+  }, []);
 
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
-        <div>Loading application...</div>
-      </div>
-    );
-  }
-
-  // Show login screen if not authenticated
-  if (!isAuthenticated) {
-    return <Login />;
+  // Show login screen if explicitly not authenticated
+  if (!authenticated) {
+    return <Login onLogin={() => setAuthenticated(true)} />;
   }
 
   return (

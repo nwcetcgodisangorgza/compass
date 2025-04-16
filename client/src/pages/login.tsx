@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 
+interface LoginProps {
+  onLogin?: () => void;
+}
+
 // Simple login page without relying on UI components
-export default function Login() {
+export default function Login({ onLogin }: LoginProps) {
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('password');
   const [message, setMessage] = useState('');
@@ -23,7 +27,8 @@ export default function Login() {
     try {
       await login(username, password);
       setMessage('Login successful!');
-      // Login is handled by the auth hook which will redirect
+      // Call the onLogin callback if provided
+      if (onLogin) onLogin();
     } catch (error) {
       console.error('Login error:', error);
       setMessage('Authentication failed. Invalid username or password.');
@@ -41,15 +46,24 @@ export default function Login() {
       setIsLoading(true);
       setMessage('Auto-logging in...');
       
-      login('admin', 'password').catch(err => {
-        console.error('Auto-login failed:', err);
-        setMessage('Auto-login failed. Please log in manually.');
-        setIsLoading(false);
-      });
+      login('admin', 'password')
+        .then(() => {
+          setMessage('Login successful!');
+          // Call the onLogin callback if provided
+          if (onLogin) {
+            console.log('Calling onLogin callback from auto-login');
+            onLogin();
+          }
+        })
+        .catch(err => {
+          console.error('Auto-login failed:', err);
+          setMessage('Auto-login failed. Please log in manually.');
+          setIsLoading(false);
+        });
     }, 1000);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [onLogin]);
 
   return (
     <div style={{
