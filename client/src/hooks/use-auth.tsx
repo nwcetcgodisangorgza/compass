@@ -71,17 +71,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await logoutMutation.mutateAsync();
   };
 
-  // For demo purposes, simulate a logged-in user
+  // Use the actual user data from the API
   useEffect(() => {
-    // Set user immediately to avoid loading delay
-    setUser({
-      id: 1,
-      username: "admin",
-      name: "John Ndlovu",
-      role: "System Administrator",
-    });
-    setIsLoading(false);
-  }, []);
+    if (isUserLoading) {
+      setIsLoading(true);
+    } else {
+      setUser(data || null);
+      setIsLoading(false);
+    }
+  }, [data, isUserLoading]);
 
   return (
     <AuthContext.Provider

@@ -51,9 +51,9 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
-            A+
+            NC
           </div>
-          <h1 className="text-2xl font-bold text-neutral-800">ASSET-PLUS</h1>
+          <h1 className="text-2xl font-bold text-neutral-800">NWCETC Compass</h1>
           <p className="text-neutral-600">North West CET College Resource Management</p>
         </div>
         
