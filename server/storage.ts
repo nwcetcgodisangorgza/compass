@@ -5,7 +5,8 @@ import {
   Student, InsertStudent,
   Asset, InsertAsset,
   Course, InsertCourse,
-  Enrollment, InsertEnrollment
+  Enrollment, InsertEnrollment,
+  District, InsertDistrict
 } from "@shared/schema";
 
 // Extend the storage interface with CRUD methods for all entities
@@ -60,6 +61,13 @@ export interface IStorage {
   updateEnrollment(id: number, enrollment: Partial<Enrollment>): Promise<Enrollment | undefined>;
   deleteEnrollment(id: number): Promise<boolean>;
   
+  // District methods
+  getDistrict(id: number): Promise<District | undefined>;
+  getDistricts(): Promise<District[]>;
+  createDistrict(district: InsertDistrict): Promise<District>;
+  updateDistrict(id: number, district: Partial<District>): Promise<District | undefined>;
+  deleteDistrict(id: number): Promise<boolean>;
+  
   // Dashboard methods
   getDashboardSummary(): Promise<any>;
 }
@@ -72,6 +80,7 @@ export class MemStorage implements IStorage {
   private assets: Map<number, Asset>;
   private courses: Map<number, Course>;
   private enrollments: Map<number, Enrollment>;
+  private districts: Map<number, District>;
   
   private userId: number = 1;
   private centerId: number = 1;
@@ -80,6 +89,7 @@ export class MemStorage implements IStorage {
   private assetId: number = 1;
   private courseId: number = 1;
   private enrollmentId: number = 1;
+  private districtId: number = 1;
 
   constructor() {
     this.users = new Map();
@@ -89,6 +99,7 @@ export class MemStorage implements IStorage {
     this.assets = new Map();
     this.courses = new Map();
     this.enrollments = new Map();
+    this.districts = new Map();
     
     // Initialize with sample admin user
     this.createUser({
@@ -379,6 +390,45 @@ export class MemStorage implements IStorage {
     return this.enrollments.delete(id);
   }
 
+  // District methods
+  async getDistrict(id: number): Promise<District | undefined> {
+    return this.districts.get(id);
+  }
+
+  async getDistricts(): Promise<District[]> {
+    return Array.from(this.districts.values());
+  }
+
+  async createDistrict(insertDistrict: InsertDistrict): Promise<District> {
+    const id = this.districtId++;
+    const now = new Date();
+    const district: District = { 
+      ...insertDistrict, 
+      id,
+      dateAdded: now,
+      lastUpdated: now 
+    };
+    this.districts.set(id, district);
+    return district;
+  }
+
+  async updateDistrict(id: number, updateData: Partial<District>): Promise<District | undefined> {
+    const district = await this.getDistrict(id);
+    if (!district) return undefined;
+    
+    const updatedDistrict = { 
+      ...district, 
+      ...updateData,
+      lastUpdated: new Date() 
+    };
+    this.districts.set(id, updatedDistrict);
+    return updatedDistrict;
+  }
+
+  async deleteDistrict(id: number): Promise<boolean> {
+    return this.districts.delete(id);
+  }
+
   // Dashboard methods
   async getDashboardSummary(): Promise<any> {
     return {
@@ -386,6 +436,7 @@ export class MemStorage implements IStorage {
       lecturerCount: this.lecturers.size,
       studentCount: this.students.size,
       assetCount: this.assets.size,
+      districtCount: this.districts.size,
       centersByType: {
         main: Array.from(this.centers.values()).filter(c => c.type === 'Main').length,
         satellite: Array.from(this.centers.values()).filter(c => c.type === 'Satellite').length,

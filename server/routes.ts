@@ -12,7 +12,8 @@ import {
   insertStudentSchema, 
   insertAssetSchema, 
   insertCourseSchema, 
-  insertEnrollmentSchema 
+  insertEnrollmentSchema,
+  insertDistrictSchema
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 
@@ -591,6 +592,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Enrollment deleted successfully" });
     } catch (err) {
       res.status(500).json({ message: "Failed to delete enrollment" });
+    }
+  });
+
+  // District routes
+  app.get("/api/districts", isAuthenticated, async (req, res) => {
+    try {
+      const districts = await storage.getDistricts();
+      res.json(districts);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch districts" });
+    }
+  });
+
+  app.get("/api/districts/:id", isAuthenticated, async (req, res) => {
+    try {
+      const district = await storage.getDistrict(Number(req.params.id));
+      if (!district) {
+        return res.status(404).json({ message: "District not found" });
+      }
+      res.json(district);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch district" });
+    }
+  });
+
+  app.post("/api/districts", isAuthenticated, async (req, res) => {
+    try {
+      const result = insertDistrictSchema.safeParse(req.body);
+      if (!result.success) {
+        const error = fromZodError(result.error);
+        return res.status(400).json({ message: error.message });
+      }
+      
+      const district = await storage.createDistrict(result.data);
+      res.status(201).json(district);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to create district" });
+    }
+  });
+
+  app.put("/api/districts/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const existingDistrict = await storage.getDistrict(id);
+      if (!existingDistrict) {
+        return res.status(404).json({ message: "District not found" });
+      }
+      
+      // Validate only the fields that are being updated
+      const validFields = Object.keys(insertDistrictSchema.shape).filter(key => 
+        key in req.body && key !== 'id' && key !== 'dateAdded' && key !== 'lastUpdated'
+      );
+      
+      const updateData = validFields.reduce((acc, key) => {
+        (acc as any)[key] = req.body[key];
+        return acc;
+      }, {});
+      
+      const updatedDistrict = await storage.updateDistrict(id, updateData);
+      res.json(updatedDistrict);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to update district" });
+    }
+  });
+
+  app.delete("/api/districts/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const success = await storage.deleteDistrict(id);
+      if (!success) {
+        return res.status(404).json({ message: "District not found" });
+      }
+      res.json({ message: "District deleted successfully" });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to delete district" });
     }
   });
 
