@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,21 @@ export default function Login() {
     setUsername('admin');
     setPassword('password');
   };
+  
+  // Auto login on page load
+  useEffect(() => {
+    setUsername('admin');
+    setPassword('password');
+    
+    // Auto submit after a small delay
+    const timer = setTimeout(() => {
+      login('admin', 'password').catch(err => {
+        console.error('Auto-login failed:', err);
+      });
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-neutral-100 p-4">
