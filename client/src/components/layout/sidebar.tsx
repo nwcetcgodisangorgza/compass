@@ -67,17 +67,19 @@ export function Sidebar({ isCollapsed, onToggle, user }: SidebarProps) {
           )}
           
           {mainNavItems.map((item) => (
-            <Link key={item.path} href={item.path}>
-              <a className={cn(
+            <Link 
+              key={item.path} 
+              href={item.path}
+              className={cn(
                 "flex items-center px-4 py-3 hover:bg-neutral-100",
                 location === item.path 
                   ? "text-primary bg-blue-50 border-l-4 border-primary" 
                   : "text-neutral-700 border-l-4 border-transparent",
                 isCollapsed && "justify-center"
-              )}>
-                <Icon name={item.icon} className={isCollapsed ? "mx-auto" : "mr-4"} />
-                {!isCollapsed && <span>{item.name}</span>}
-              </a>
+              )}
+            >
+              <Icon name={item.icon} className={isCollapsed ? "mx-auto" : "mr-4"} />
+              {!isCollapsed && <span>{item.name}</span>}
             </Link>
           ))}
 
@@ -88,17 +90,19 @@ export function Sidebar({ isCollapsed, onToggle, user }: SidebarProps) {
           )}
           
           {analyticsNavItems.map((item) => (
-            <Link key={item.path} href={item.path}>
-              <a className={cn(
+            <Link 
+              key={item.path} 
+              href={item.path}
+              className={cn(
                 "flex items-center px-4 py-3 hover:bg-neutral-100",
                 location === item.path 
                   ? "text-primary bg-blue-50 border-l-4 border-primary" 
                   : "text-neutral-700 border-l-4 border-transparent",
                 isCollapsed && "justify-center"
-              )}>
-                <Icon name={item.icon} className={isCollapsed ? "mx-auto" : "mr-4"} />
-                {!isCollapsed && <span>{item.name}</span>}
-              </a>
+              )}
+            >
+              <Icon name={item.icon} className={isCollapsed ? "mx-auto" : "mr-4"} />
+              {!isCollapsed && <span>{item.name}</span>}
             </Link>
           ))}
         </nav>

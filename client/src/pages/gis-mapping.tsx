@@ -23,7 +23,7 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 // South Africa's center coordinates (approximate)
-const SouthAfricaCenter = [-30.5595, 22.9375];
+const SouthAfricaCenter: [number, number] = [-30.5595, 22.9375];
 const initialZoom = 6;
 
 // Sample center data (we'd replace this with real data from the API)
@@ -109,7 +109,7 @@ export default function GISMapping() {
                 {centers.map(center => (
                   <Marker 
                     key={center.id}
-                    position={[parseFloat(center.latitude), parseFloat(center.longitude)]}
+                    position={[parseFloat(center.latitude), parseFloat(center.longitude)] as [number, number]}
                   >
                     <Popup>
                       <div>
