@@ -33,9 +33,10 @@ export const authService = {
         return null;
       }
       
-      // For development, we're doing a simple comparison
-      // In production, you would compare with bcrypt.compare
-      if (password !== user.password) {
+      // Verify password with bcrypt
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      
+      if (!isPasswordValid) {
         console.log('Invalid password for user:', username);
         return null;
       }
@@ -46,7 +47,11 @@ export const authService = {
       // Generate JWT token
       const token = generateToken(user);
       
-      return { user, token };
+      // Remove sensitive information from user object
+      const safeUser = { ...user };
+      delete (safeUser as any).password;
+      
+      return { user: safeUser, token };
     } catch (error) {
       console.error('Login error:', error);
       return null;
@@ -64,8 +69,9 @@ export const authService = {
         return null;
       }
       
-      // In production, you would hash the password
-      // userData.password = await bcrypt.hash(userData.password, 10);
+      // Hash the password with bcrypt
+      const salt = await bcrypt.genSalt(10);
+      userData.password = await bcrypt.hash(userData.password, salt);
       
       // Create the user
       const user = await storage.createUser(userData);
@@ -73,7 +79,11 @@ export const authService = {
       // Generate JWT token
       const token = generateToken(user);
       
-      return { user, token };
+      // Remove sensitive information from user object
+      const safeUser = { ...user };
+      delete (safeUser as any).password;
+      
+      return { user: safeUser, token };
     } catch (error) {
       console.error('Registration error:', error);
       return null;
