@@ -1,10 +1,7 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import session from "express-session";
-import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
-import MemoryStore from "memorystore";
+import { authService, authenticate, authorize } from "./auth";
 import { 
   insertUserSchema, 
   insertCenterSchema, 
@@ -18,115 +15,76 @@ import {
 import { fromZodError } from "zod-validation-error";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Configure session management
-  const MemoryStoreSession = MemoryStore(session);
-  
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET || "asset-plus-secret",
-      resave: false,
-      saveUninitialized: false,
-      cookie: { 
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 1000 * 60 * 60 * 24 // 24 hours
-      },
-      store: new MemoryStoreSession({
-        checkPeriod: 86400000 // prune expired entries every 24h
-      })
-    })
-  );
-
-  // Configure authentication
-  app.use(passport.initialize());
-  app.use(passport.session());
-
-  passport.use(
-    new LocalStrategy(async (username, password, done) => {
-      try {
-        const user = await storage.getUserByUsername(username);
-        if (!user) {
-          return done(null, false, { message: "Invalid username" });
-        }
-        
-        // In a real app, we would check the password hash
-        if (user.password !== password) {
-          return done(null, false, { message: "Invalid password" });
-        }
-        
-        // Update last login time
-        await storage.updateUser(user.id, { lastLogin: new Date() });
-        
-        return done(null, user);
-      } catch (err) {
-        return done(err);
-      }
-    })
-  );
-
-  passport.serializeUser((user: any, done) => {
-    done(null, user.id);
-  });
-
-  passport.deserializeUser(async (id: number, done) => {
+  // Authentication routes with JWT
+  app.post("/api/auth/login", async (req, res) => {
     try {
-      const user = await storage.getUser(id);
-      done(null, user);
-    } catch (err) {
-      done(err);
-    }
-  });
-
-  // Authentication middleware
-  function isAuthenticated(req: Request, res: Response, next: Function) {
-    if (req.isAuthenticated()) {
-      return next();
-    }
-    res.status(401).json({ message: "Unauthorized" });
-  }
-
-  // Authentication routes
-  app.post("/api/auth/login", (req, res, next) => {
-    passport.authenticate("local", (err: any, user: any, info: any) => {
-      if (err) {
-        return next(err);
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required" });
       }
-      if (!user) {
-        return res.status(401).json({ message: info.message || "Authentication failed" });
+      
+      const result = await authService.login(username, password);
+      
+      if (!result) {
+        return res.status(401).json({ message: "Invalid username or password" });
       }
-      req.logIn(user, function(err) {
-        if (err) {
-          return next(err);
-        }
-        
-        // Remove password from response
-        const userResponse = { ...user };
-        delete userResponse.password;
-        
-        return res.json(userResponse);
+      
+      // Remove sensitive data
+      const userResponse = { ...result.user };
+      delete userResponse.password;
+      
+      // Return user data and token
+      res.json({
+        user: userResponse,
+        token: result.token
       });
-    })(req, res, next);
-  });
-
-  app.post("/api/auth/logout", (req, res) => {
-    req.logout(() => {
-      res.json({ message: "Logged out successfully" });
-    });
-  });
-
-  app.get("/api/auth/me", (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Not authenticated" });
+    } catch (err) {
+      console.error('Login error:', err);
+      res.status(500).json({ message: "An error occurred during login" });
     }
-    
-    // Remove password from response
+  });
+
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const result = insertUserSchema.safeParse(req.body);
+      
+      if (!result.success) {
+        const error = fromZodError(result.error);
+        return res.status(400).json({ message: error.message });
+      }
+      
+      const authResult = await authService.register(result.data);
+      
+      if (!authResult) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+      
+      // Remove sensitive data
+      const userResponse = { ...authResult.user };
+      delete userResponse.password;
+      
+      // Return user data and token
+      res.status(201).json({
+        user: userResponse,
+        token: authResult.token
+      });
+    } catch (err) {
+      console.error('Registration error:', err);
+      res.status(500).json({ message: "An error occurred during registration" });
+    }
+  });
+
+  app.get("/api/auth/me", authenticate, (req: any, res) => {
+    // User data is already in req.user from the authenticate middleware
     const userResponse = { ...req.user };
-    delete (userResponse as any).password;
+    // No need to delete password as it's not included in the JWT payload
     
     res.json(userResponse);
   });
 
   // Center routes
-  app.get("/api/centers", isAuthenticated, async (req, res) => {
+  app.get("/api/centers", authenticate, async (req, res) => {
     try {
       const centers = await storage.getCenters();
       res.json(centers);
@@ -135,7 +93,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/centers/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/centers/:id", authenticate, async (req, res) => {
     try {
       const center = await storage.getCenter(Number(req.params.id));
       if (!center) {
@@ -147,7 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/centers", isAuthenticated, async (req, res) => {
+  app.post("/api/centers", authenticate, async (req, res) => {
     try {
       const result = insertCenterSchema.safeParse(req.body);
       if (!result.success) {
@@ -162,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/centers/:id", isAuthenticated, async (req, res) => {
+  app.put("/api/centers/:id", authenticate, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const existingCenter = await storage.getCenter(id);
@@ -187,7 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/centers/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/centers/:id", authenticate, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const success = await storage.deleteCenter(id);
@@ -201,7 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Lecturer routes
-  app.get("/api/lecturers", isAuthenticated, async (req, res) => {
+  app.get("/api/lecturers", authenticate, async (req, res) => {
     try {
       const lecturers = await storage.getLecturers();
       res.json(lecturers);
@@ -210,7 +168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/lecturers/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/lecturers/:id", authenticate, async (req, res) => {
     try {
       const lecturer = await storage.getLecturer(Number(req.params.id));
       if (!lecturer) {
@@ -222,7 +180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/lecturers", isAuthenticated, async (req, res) => {
+  app.post("/api/lecturers", authenticate, async (req, res) => {
     try {
       const result = insertLecturerSchema.safeParse(req.body);
       if (!result.success) {
@@ -237,7 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/lecturers/:id", isAuthenticated, async (req, res) => {
+  app.put("/api/lecturers/:id", authenticate, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const existingLecturer = await storage.getLecturer(id);
@@ -262,7 +220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/lecturers/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/lecturers/:id", authenticate, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const success = await storage.deleteLecturer(id);
@@ -276,7 +234,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Student routes
-  app.get("/api/students", isAuthenticated, async (req, res) => {
+  app.get("/api/students", authenticate, async (req, res) => {
     try {
       const students = await storage.getStudents();
       res.json(students);
@@ -285,7 +243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/students/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/students/:id", authenticate, async (req, res) => {
     try {
       const student = await storage.getStudent(Number(req.params.id));
       if (!student) {
@@ -297,7 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/students", isAuthenticated, async (req, res) => {
+  app.post("/api/students", authenticate, async (req, res) => {
     try {
       const result = insertStudentSchema.safeParse(req.body);
       if (!result.success) {
@@ -312,7 +270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/students/:id", isAuthenticated, async (req, res) => {
+  app.put("/api/students/:id", authenticate, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const existingStudent = await storage.getStudent(id);
@@ -337,7 +295,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/students/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/students/:id", authenticate, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const success = await storage.deleteStudent(id);
@@ -351,7 +309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Asset routes
-  app.get("/api/assets", isAuthenticated, async (req, res) => {
+  app.get("/api/assets", authenticate, async (req, res) => {
     try {
       const assets = await storage.getAssets();
       res.json(assets);
@@ -360,7 +318,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/assets/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/assets/:id", authenticate, async (req, res) => {
     try {
       const asset = await storage.getAsset(Number(req.params.id));
       if (!asset) {
@@ -372,7 +330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/assets", isAuthenticated, async (req, res) => {
+  app.post("/api/assets", authenticate, async (req, res) => {
     try {
       const result = insertAssetSchema.safeParse(req.body);
       if (!result.success) {
@@ -387,7 +345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/assets/:id", isAuthenticated, async (req, res) => {
+  app.put("/api/assets/:id", authenticate, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const existingAsset = await storage.getAsset(id);
@@ -412,7 +370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/assets/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/assets/:id", authenticate, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const success = await storage.deleteAsset(id);
@@ -426,7 +384,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Course routes
-  app.get("/api/courses", isAuthenticated, async (req, res) => {
+  app.get("/api/courses", authenticate, async (req, res) => {
     try {
       const courses = await storage.getCourses();
       res.json(courses);
@@ -435,7 +393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/courses/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/courses/:id", authenticate, async (req, res) => {
     try {
       const course = await storage.getCourse(Number(req.params.id));
       if (!course) {
@@ -447,7 +405,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/courses", isAuthenticated, async (req, res) => {
+  app.post("/api/courses", authenticate, async (req, res) => {
     try {
       const result = insertCourseSchema.safeParse(req.body);
       if (!result.success) {
@@ -462,7 +420,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/courses/:id", isAuthenticated, async (req, res) => {
+  app.put("/api/courses/:id", authenticate, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const existingCourse = await storage.getCourse(id);
@@ -487,7 +445,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/courses/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/courses/:id", authenticate, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const success = await storage.deleteCourse(id);
@@ -501,7 +459,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Enrollment routes
-  app.get("/api/enrollments", isAuthenticated, async (req, res) => {
+  app.get("/api/enrollments", authenticate, async (req, res) => {
     try {
       const enrollments = await storage.getEnrollments();
       res.json(enrollments);
@@ -510,7 +468,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/enrollments/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/enrollments/:id", authenticate, async (req, res) => {
     try {
       const enrollment = await storage.getEnrollment(Number(req.params.id));
       if (!enrollment) {
@@ -522,7 +480,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/students/:studentId/enrollments", isAuthenticated, async (req, res) => {
+  app.get("/api/students/:studentId/enrollments", authenticate, async (req, res) => {
     try {
       const studentId = Number(req.params.studentId);
       const enrollments = await storage.getEnrollmentsByStudent(studentId);
@@ -532,7 +490,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/courses/:courseId/enrollments", isAuthenticated, async (req, res) => {
+  app.get("/api/courses/:courseId/enrollments", authenticate, async (req, res) => {
     try {
       const courseId = Number(req.params.courseId);
       const enrollments = await storage.getEnrollmentsByCourse(courseId);
@@ -542,7 +500,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/enrollments", isAuthenticated, async (req, res) => {
+  app.post("/api/enrollments", authenticate, async (req, res) => {
     try {
       const result = insertEnrollmentSchema.safeParse(req.body);
       if (!result.success) {
@@ -557,7 +515,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/enrollments/:id", isAuthenticated, async (req, res) => {
+  app.put("/api/enrollments/:id", authenticate, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const existingEnrollment = await storage.getEnrollment(id);
@@ -582,7 +540,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/enrollments/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/enrollments/:id", authenticate, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const success = await storage.deleteEnrollment(id);
@@ -596,7 +554,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // District routes
-  app.get("/api/districts", isAuthenticated, async (req, res) => {
+  app.get("/api/districts", authenticate, async (req, res) => {
     try {
       const districts = await storage.getDistricts();
       res.json(districts);
@@ -605,7 +563,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/districts/:id", isAuthenticated, async (req, res) => {
+  app.get("/api/districts/:id", authenticate, async (req, res) => {
     try {
       const district = await storage.getDistrict(Number(req.params.id));
       if (!district) {
@@ -617,7 +575,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/districts", isAuthenticated, async (req, res) => {
+  app.post("/api/districts", authenticate, async (req, res) => {
     try {
       const result = insertDistrictSchema.safeParse(req.body);
       if (!result.success) {
@@ -632,7 +590,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/districts/:id", isAuthenticated, async (req, res) => {
+  app.put("/api/districts/:id", authenticate, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const existingDistrict = await storage.getDistrict(id);
@@ -657,7 +615,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/districts/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/districts/:id", authenticate, async (req, res) => {
     try {
       const id = Number(req.params.id);
       const success = await storage.deleteDistrict(id);
@@ -671,7 +629,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard routes
-  app.get("/api/dashboard/summary", isAuthenticated, async (req, res) => {
+  app.get("/api/dashboard/summary", authenticate, async (req, res) => {
     try {
       const summary = await storage.getDashboardSummary();
       res.json(summary);

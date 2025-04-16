@@ -37,33 +37,7 @@ export default function Login({ onLogin }: LoginProps) {
     }
   };
   
-  // Auto login on page load
-  useEffect(() => {
-    console.log('Login page loaded, attempting auto-login');
-    
-    // Auto submit after a small delay
-    const timer = setTimeout(() => {
-      setIsLoading(true);
-      setMessage('Auto-logging in...');
-      
-      login('admin', 'password')
-        .then(() => {
-          setMessage('Login successful!');
-          // Call the onLogin callback if provided
-          if (onLogin) {
-            console.log('Calling onLogin callback from auto-login');
-            onLogin();
-          }
-        })
-        .catch(err => {
-          console.error('Auto-login failed:', err);
-          setMessage('Auto-login failed. Please log in manually.');
-          setIsLoading(false);
-        });
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, [onLogin]);
+  // No more auto-login - using real Supabase authentication now
 
   return (
     <div style={{

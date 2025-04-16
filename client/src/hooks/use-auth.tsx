@@ -9,6 +9,11 @@ interface User {
   role: string;
 }
 
+interface AuthResponse {
+  user: User;
+  token: string;
+}
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -16,6 +21,8 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
+
+const TOKEN_KEY = 'asset_plus_token';
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -25,6 +32,21 @@ const AuthContext = createContext<AuthContextType>({
   logout: async () => {},
 });
 
+// Helper to get token from localStorage
+const getToken = (): string | null => {
+  return localStorage.getItem(TOKEN_KEY);
+};
+
+// Helper to set token in localStorage
+const setToken = (token: string): void => {
+  localStorage.setItem(TOKEN_KEY, token);
+};
+
+// Helper to remove token from localStorage
+const removeToken = (): void => {
+  localStorage.removeItem(TOKEN_KEY);
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,10 +55,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     queryKey: ["/api/auth/me"],
     queryFn: async () => {
       try {
-        const res = await fetch("/api/auth/me");
-        if (!res.ok) return null;
+        // Include token in auth header if it exists
+        const token = getToken();
+        if (!token) return null;
+        
+        const res = await fetch("/api/auth/me", {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!res.ok) {
+          if (res.status === 401) {
+            // Token invalid/expired, remove it
+            removeToken();
+          }
+          return null;
+        }
+        
         return await res.json();
       } catch (e) {
+        console.error('Error fetching user profile:', e);
         return null;
       }
     },
@@ -46,17 +85,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loginMutation = useMutation({
     mutationFn: async (credentials: { username: string; password: string }) => {
       const res = await apiRequest("POST", "/api/auth/login", credentials);
-      return await res.json();
+      return await res.json() as AuthResponse;
     },
     onSuccess: (data) => {
-      setUser(data);
+      // Save the JWT token in localStorage
+      setToken(data.token);
+      setUser(data.user);
+      // Refresh user data from server
       refetch();
     },
   });
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/auth/logout", {});
+      // No need to call the server for logout with JWT
+      // Just remove the token from localStorage
+      removeToken();
     },
     onSuccess: () => {
       setUser(null);
@@ -80,6 +124,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     }
   }, [data, isUserLoading]);
+
+  // Check for token on initial load
+  useEffect(() => {
+    const token = getToken();
+    if (token) {
+      // This will trigger the query to fetch user data
+      refetch();
+    } else {
+      setIsLoading(false);
+    }
+  }, [refetch]);
 
   return (
     <AuthContext.Provider
