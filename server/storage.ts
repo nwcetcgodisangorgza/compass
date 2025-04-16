@@ -783,4 +783,6 @@ export class DatabaseStorage implements IStorage {
 }
 
 // Initialize with DatabaseStorage instead of MemStorage
-export const storage = new DatabaseStorage();
+import { SupabaseStorage } from './supabaseStorage';
+
+export const storage = new SupabaseStorage();
