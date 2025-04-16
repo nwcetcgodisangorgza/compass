@@ -1,60 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
 
+// Simple login page without relying on UI components
 export default function Login() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('admin');
+  const [password, setPassword] = useState('password');
+  const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
-  const { toast } = useToast();
 
+  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
-      toast({
-        title: "Validation Error",
-        description: "Please enter both username and password",
-        variant: "destructive"
-      });
+      setMessage('Please enter both username and password');
       return;
     }
 
     setIsLoading(true);
+    setMessage('Logging in...');
     
     try {
       await login(username, password);
-      // Login is handled by the auth hook
+      setMessage('Login successful!');
+      // Login is handled by the auth hook which will redirect
     } catch (error) {
-      toast({
-        title: "Authentication Failed",
-        description: "Invalid username or password",
-        variant: "destructive"
-      });
+      console.error('Login error:', error);
+      setMessage('Authentication failed. Invalid username or password.');
     } finally {
       setIsLoading(false);
     }
   };
-
-  // For demo purposes, auto-fill with demo credentials
-  const fillDemoCredentials = () => {
-    setUsername('admin');
-    setPassword('password');
-  };
   
   // Auto login on page load
   useEffect(() => {
-    setUsername('admin');
-    setPassword('password');
+    console.log('Login page loaded, attempting auto-login');
     
     // Auto submit after a small delay
     const timer = setTimeout(() => {
+      setIsLoading(true);
+      setMessage('Auto-logging in...');
+      
       login('admin', 'password').catch(err => {
         console.error('Auto-login failed:', err);
+        setMessage('Auto-login failed. Please log in manually.');
+        setIsLoading(false);
       });
     }, 1000);
     
@@ -62,67 +52,176 @@ export default function Login() {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-100 p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#f5f5f5',
+      padding: '20px'
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: '400px',
+        textAlign: 'center'
+      }}>
+        <div style={{
+          marginBottom: '30px'
+        }}>
+          <div style={{
+            height: '50px',
+            width: '50px',
+            backgroundColor: '#0070f3',
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontSize: '20px',
+            fontWeight: 'bold',
+            margin: '0 auto 15px'
+          }}>
             NC
           </div>
-          <h1 className="text-2xl font-bold text-neutral-800">NWCETC Compass</h1>
-          <p className="text-neutral-600">North West CET College Resource Management</p>
+          <h1 style={{
+            fontSize: '24px',
+            fontWeight: 'bold',
+            marginBottom: '8px'
+          }}>NWCETC Compass</h1>
+          <p style={{
+            color: '#666',
+            marginBottom: '20px'
+          }}>North West CET College Resource Management</p>
         </div>
         
-        <Card className="shadow-md border-0">
-          <CardHeader>
-            <CardTitle className="text-xl">Login</CardTitle>
-            <CardDescription>Enter your credentials to access the system</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
-                  <Input 
-                    id="username"
-                    type="text" 
-                    placeholder="Enter your username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input 
-                    id="password"
-                    type="password" 
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-              <Button type="submit" className="w-full mt-6" disabled={isLoading}>
-                {isLoading ? 
-                  <div className="flex items-center">
-                    <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                    Logging in...
-                  </div> 
-                  : 'Login'
-                }
-              </Button>
-            </form>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <a href="#forgot" className="text-sm text-neutral-500 hover:text-primary">Forgot password?</a>
-            <Button variant="ghost" size="sm" onClick={fillDemoCredentials}>
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '8px',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+          padding: '24px'
+        }}>
+          <h2 style={{
+            fontSize: '20px',
+            fontWeight: 'bold',
+            marginBottom: '5px'
+          }}>Login</h2>
+          <p style={{
+            color: '#666',
+            marginBottom: '20px'
+          }}>Enter your credentials to access the system</p>
+          
+          {message && (
+            <div style={{
+              padding: '10px',
+              marginBottom: '15px',
+              backgroundColor: message.includes('failed') ? '#FEE2E2' : '#EFF6FF',
+              color: message.includes('failed') ? '#B91C1C' : '#1E40AF',
+              borderRadius: '4px'
+            }}>
+              {message}
+            </div>
+          )}
+          
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{
+                display: 'block',
+                marginBottom: '5px',
+                fontWeight: '500'
+              }}>
+                Username
+              </label>
+              <input 
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '4px'
+                }}
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+            
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{
+                display: 'block',
+                marginBottom: '5px',
+                fontWeight: '500'
+              }}>
+                Password
+              </label>
+              <input 
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '4px'
+                }}
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+            
+            <button 
+              type="submit"
+              disabled={isLoading}
+              style={{
+                width: '100%',
+                padding: '10px',
+                backgroundColor: '#0070f3',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                fontWeight: '500',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                opacity: isLoading ? 0.7 : 1
+              }}
+            >
+              {isLoading ? 'Logging in...' : 'Login'}
+            </button>
+          </form>
+          
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginTop: '15px'
+          }}>
+            <a href="#forgot" style={{
+              fontSize: '14px',
+              color: '#666',
+              textDecoration: 'none'
+            }}>
+              Forgot password?
+            </a>
+            <button 
+              onClick={() => {
+                setUsername('admin');
+                setPassword('password');
+              }}
+              style={{
+                backgroundColor: 'transparent',
+                border: 'none',
+                color: '#0070f3',
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}
+            >
               Demo Login
-            </Button>
-          </CardFooter>
-        </Card>
+            </button>
+          </div>
+        </div>
         
-        <p className="text-center text-sm text-neutral-500 mt-6">
+        <p style={{
+          fontSize: '14px',
+          color: '#666',
+          marginTop: '24px'
+        }}>
           © 2023 North West CET College. All rights reserved.
         </p>
       </div>

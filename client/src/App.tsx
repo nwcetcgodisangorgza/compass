@@ -19,15 +19,23 @@ import { useAuth } from "@/hooks/use-auth";
 function App() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  
+  // For development, log auth state
+  useEffect(() => {
+    console.log('Auth state:', { user, isAuthenticated, isLoading });
+  }, [user, isAuthenticated, isLoading]);
 
+  // Show loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+        <div>Loading application...</div>
       </div>
     );
   }
 
+  // Show login screen if not authenticated
   if (!isAuthenticated) {
     return <Login />;
   }
