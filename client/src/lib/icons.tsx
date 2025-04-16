@@ -19,6 +19,7 @@ import {
   Filter,
   Home,
   PieChart,
+  MapPin,
 } from 'lucide-react';
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
@@ -57,6 +58,8 @@ export const Icon = ({ name, className = "", ...props }: IconProps) => {
     pie_chart: <PieChart {...props} className={className} />,
     bar_chart: <BarChart3 {...props} className={className} />,
     donut_large: <PieChart {...props} className={className} />,
+    location_on: <MapPin {...props} className={className} />,
+    districts: <MapPin {...props} className={className} />,
   };
 
   return <>{iconMap[name] || <span>{name}</span>}</>;
