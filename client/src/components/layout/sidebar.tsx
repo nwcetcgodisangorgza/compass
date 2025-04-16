@@ -3,6 +3,7 @@ import { Link, useLocation } from 'wouter';
 import { Icon } from '@/lib/icons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
 
 export interface SidebarProps {
   isCollapsed: boolean;
@@ -36,6 +37,7 @@ const analyticsNavItems: NavItem[] = [
 
 export function Sidebar({ isCollapsed, onToggle, user }: SidebarProps) {
   const [location] = useLocation();
+  const { logout } = useAuth();
 
   return (
     <aside className={cn(
@@ -113,10 +115,13 @@ export function Sidebar({ isCollapsed, onToggle, user }: SidebarProps) {
               <p className="text-xs text-neutral-500">{user.role}</p>
             </div>
           </div>
-          <a href="#" className="flex items-center text-sm text-neutral-700 hover:text-primary">
+          <button 
+            onClick={() => logout()}
+            className="flex items-center text-sm text-neutral-700 hover:text-primary bg-transparent border-0"
+          >
             <Icon name="logout" className="mr-2 h-4 w-4" />
             Sign Out
-          </a>
+          </button>
         </div>
       )}
     </aside>
