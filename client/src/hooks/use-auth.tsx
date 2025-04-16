@@ -40,7 +40,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return null;
       }
     },
-    enabled: false, // Don't run this query since we're using mock data
     retry: false,
   });
 
